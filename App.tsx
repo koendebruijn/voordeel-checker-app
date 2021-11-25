@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Text,
   Link,
@@ -11,61 +11,50 @@ import {
   extendTheme,
   VStack,
   Code,
+  Box,
+  Pressable,
+  Button
 } from "native-base";
-import NativeBaseIcon from "./components/NativeBaseIcon";
+import AppHeading from "./components/Heading";
+import { SafeAreaView, ScrollView } from "react-native";
+import ProductSearch from "./components/ProductSearch";
+import { environment } from "./environment";
+import { getItemsInSale } from "./lib/api";
+import { Product } from "./@types/Product";
+import ProductList from "./components/ProductList";
 
 // Define the config
 const config = {
   useSystemColorMode: false,
-  initialColorMode: "dark",
+  initialColorMode: "dark"
 };
 
 // extend the theme
 export const theme = extendTheme({ config });
 
 export default function App() {
+  const [isLoading, setIsloading] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+
+  const onSearch = async (productName: string) => {
+    setIsloading(true);
+
+    const res = await getItemsInSale(productName);
+
+    if (res.data) setProducts(res.data);
+
+    setIsloading(false);
+  };
+
   return (
     <NativeBaseProvider>
-      <Center
-        _dark={{ bg: "blueGray.900" }}
-        _light={{ bg: "blueGray.50" }}
-        px={4}
-        flex={1}
-      >
-        <VStack space={5} alignItems="center">
-          <NativeBaseIcon />
-          <Heading size="lg">Welcome to NativeBase</Heading>
-          <HStack space={2} alignItems="center">
-            <Text>Edit</Text>
-            <Code>App.tsx</Code>
-            <Text>and save to reload.</Text>
-          </HStack>
-          <Link href="https://docs.nativebase.io" isExternal>
-            <Text color="primary.500" underline fontSize={"xl"}>
-              Learn NativeBase
-            </Text>
-          </Link>
-          <ToggleDarkMode />
+      <Box bg='coolGray.100' flex={1}>
+        <VStack margin={5} safeArea safeAreaBottom bg='coolGray.100'>
+          <AppHeading />
+          <ProductSearch onSubmit={onSearch} isLoading={isLoading} />
+          <ProductList products={products} />
         </VStack>
-      </Center>
+      </Box>
     </NativeBaseProvider>
-  );
-}
-
-// Color Switch Component
-function ToggleDarkMode() {
-  const { colorMode, toggleColorMode } = useColorMode();
-  return (
-    <HStack space={2} alignItems="center">
-      <Text>Dark</Text>
-      <Switch
-        isChecked={colorMode === "light" ? true : false}
-        onToggle={toggleColorMode}
-        aria-label={
-          colorMode === "light" ? "switch to dark mode" : "switch to light mode"
-        }
-      />
-      <Text>Light</Text>
-    </HStack>
   );
 }
